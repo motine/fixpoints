@@ -1,4 +1,4 @@
-require "fixpoints/version"
+require_relative "fixpoints/version"
 
 module Fixpoints
   class Error < StandardError; end

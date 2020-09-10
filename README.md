@@ -45,6 +45,14 @@ end
 
 ```bash
 docker run --rm -ti -v (pwd):/app -w /app ruby:2.7 bash
+bundle install
+rspec
+pry # require_relative 'lib/fixpoints.rb'
+
+gem build
+gem install fixpoints-0.1.0.gem
+pry -r fixpoints
+gem uninstall fixpoints
 ```
 
 
