@@ -14,7 +14,7 @@ module FixpointDiff
 
   def extract_changes(parent_records_in_tables, records_in_tables)
     tables = (parent_records_in_tables.keys + records_in_tables.keys).uniq
-    
+
     tables.each_with_object({}) do |table, changes_in_tables|
       changes_in_tables[table] = extract_records_changes(parent_records_in_tables[table], records_in_tables[table])
     end
@@ -26,8 +26,8 @@ module FixpointDiff
 
   def apply_records_changes(parent_records, changes)
     return parent_records if changes.blank?
-    parent_records ||= [] # the table was not part of an earlier fixpoint
 
+    parent_records ||= [] # the table was not part of an earlier fixpoint
     changes.zip(parent_records).collect do |change, parent_record| # we can rely on the fact that changes has always more entries than parent_records
       next change if parent_record.nil? # we do have a new record
       next nil if change[DELETED_KEY]

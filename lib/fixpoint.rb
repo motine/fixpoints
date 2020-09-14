@@ -57,15 +57,15 @@ class Fixpoint
     # useful when tests sometimes run before the storing the first fixpoint.
     # these test might have incremented the id sequence already, so the ids in the fixpoints chance (which leads to differences).
     def reset_pk_sequences!
-      if conn.respond_to?(:reset_pk_sequence!)
-        conn.tables.each { |table_name| conn.reset_pk_sequence!(table_name) }
-      end
+      return unless conn.respond_to?(:reset_pk_sequence!)
+      conn.tables.each { |table_name| conn.reset_pk_sequence!(table_name) }
     end
 
     def fixpoint_path(fixname)
       fspath = self.fixpoints_path
       raise Fixpoint::Error, 'Can not automatically infer the base path for the specs, please set `rspec_config.fixpoints_path` explicitly' if fspath.nil?
       raise Fixpoint::Error, "Please create the fixpoints folder (and maybe create a .gitkeep): #{fspath}" if !File.exist?(fspath)
+
       File.join(fspath, "#{fixname}.yml")
     end
 
@@ -81,6 +81,7 @@ class Fixpoint
       # now this is ugly, but necessary. we go up from the current example's path until we find the spec folder...
       return nil if RSpec.current_example.nil?
       spec_path = Pathname.new(RSpec.current_example.file_path).ascend.find { |pn| pn.basename.to_s == RSpec.configuration.default_path }.expand_path
+
       File.join(spec_path, FIXPOINT_FOLDER)
     end
 
@@ -139,7 +140,7 @@ class Fixpoint
   # +ignore_columns+ array of columns to remove from each record Hash.
   #     Aside from having the form <tt>[:created_at, :updated_at]</tt>,
   #     it can contain attributes scoped by a table name <tt>[:created_at, :updated_at, users: [:password_hash]]</tt>
-  def records_for_table(table_name, ignore_columns=[])
+  def records_for_table(table_name, ignore_columns = [])
     strip_columns_from_records(@records_in_tables[table_name], table_name, ignore_columns)
   end
 
