@@ -4,6 +4,7 @@ RSpec.describe Fixpoints do
   end
 
   it "database to be setup" do
+    Book.delete_all
     book = Book.create!(title: "The Tail of Points that were Fixed")
     expect(Book.count).to eq(1)
   end

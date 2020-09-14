@@ -1,8 +1,19 @@
 RSpec.describe Fixpoint, order: :defined do
+  let(:fixpoints_path) { File.join(__dir__, 'fixpoints') }
+  
+  before(:each) do
+    FileUtils.mkdir_p(fixpoints_path)
+  end
+
   after(:all) do
     described_class.remove('fp_one')
     described_class.remove('fp_two')
     described_class.remove('fp_tmp')
+  end
+
+  it 'raises if there is no fixpoints path' do # this test must come first, so we do not destroy fixpoints...
+    FileUtils.rm_rf(fixpoints_path)
+    expect { described_class.from_database.save_to_file('fp_one') }.to raise_error(Fixpoint::Error)
   end
 
   it 'saves and restores fixpoint' do
@@ -50,7 +61,7 @@ RSpec.describe Fixpoint, order: :defined do
 
       # attribute in database should have changed
       fp.load_into_database
-      expect(Book.first.ip).to eq('Lorem and stuff')
+      expect(Book.first.summary).to eq('Lorem and stuff')
     end
 
     it 'stores & restores deleted record & restores' do

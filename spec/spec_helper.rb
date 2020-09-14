@@ -14,6 +14,8 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  config.fixpoints_path = File.join(__dir__, 'fixpoints')
+
   # setup test database
   config.before(:suite) do
     ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: DB_PATH)
