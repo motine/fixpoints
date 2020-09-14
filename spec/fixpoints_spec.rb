@@ -3,7 +3,9 @@ RSpec.describe Fixpoints do
     expect(Fixpoints::VERSION).not_to be nil
   end
 
-  it "does something useful" do
-    expect(true).to eq(true)
+  it "database to be setup" do
+    book = Book.create!(title: "The Tail of Points that were Fixed")
+    
+    expect(Book.count).to eq(1)
   end
 end
