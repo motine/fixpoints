@@ -85,9 +85,7 @@ A change in a fixpoint might point to an unintended change in code.
 We need to be be careful to use `let` and `let!` with factories.
 Records might be created twice when using create in there (once by the fixpoint and once by the factory).
 
-**Ignoring columns**
-
-Often you might want to add more columns to ignore (e.g. login time stamps):
+**Ignoring columns** Often you might want to add more columns to ignore (e.g. login time stamps):
 
 ```ruby
 let(:ignored_fixpoint_columns) { [:updated_at, :created_at, users: [:last_login_at] }
