@@ -6,11 +6,6 @@ DB_PATH = File.join(__dir__, '../tmp/test.sqlite3')
 Warning[:deprecated] = false # let's get rid of the annoying kwargs deprecation notice in ActiveRecord
 
 class Book < ActiveRecord::Base
-  has_many :summaries
-end
-
-class Summary < ActiveRecord::Base
-  belongs_to :book
 end
 
 RSpec.configure do |config|
@@ -27,11 +22,8 @@ RSpec.configure do |config|
     ActiveRecord::Schema.define do
       create_table :books do |t|
         t.string :title
+        t.string :summary
         t.timestamps
-      end
-      create_table :summaries do |t|
-        t.string :content
-        t.references :book
       end
     end
   end
