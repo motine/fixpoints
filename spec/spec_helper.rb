@@ -15,6 +15,7 @@ RSpec.configure do |config|
   end
 
   config.fixpoints_path = File.join(__dir__, 'fixpoints')
+  config.include FixpointTestHelpers
 
   # setup test database
   config.before(:suite) do
