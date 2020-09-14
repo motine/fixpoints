@@ -3,6 +3,7 @@ RSpec.describe Fixpoint, order: :defined do
   
   before(:each) do
     FileUtils.mkdir_p(fixpoints_path)
+    Book.delete_all
   end
 
   after(:all) do
