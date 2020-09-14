@@ -3,9 +3,8 @@ module FixpointDiff
   DELETED_KEY = '++DELETED++'
   IGNORE_ATTRIBUTES = ['updated_at']
 
-  # TODO use module_function :apply_changes
 
-  def self.apply_changes(parent_records_in_tables, changes_in_tables)
+  def apply_changes(parent_records_in_tables, changes_in_tables)
     tables = (parent_records_in_tables.keys + changes_in_tables.keys).uniq
 
     tables.each_with_object({}) do |table, records|
@@ -13,7 +12,7 @@ module FixpointDiff
     end
   end
 
-  def self.extract_changes(parent_records_in_tables, records_in_tables)
+  def extract_changes(parent_records_in_tables, records_in_tables)
     tables = (parent_records_in_tables.keys + records_in_tables.keys).uniq
     
     tables.each_with_object({}) do |table, changes_in_tables|
@@ -21,9 +20,11 @@ module FixpointDiff
     end
   end
 
-  protected # TODO use self << class
+  module_function :apply_changes, :extract_changes
 
-  def self.apply_records_changes(parent_records, changes)
+  protected
+
+  def apply_records_changes(parent_records, changes)
     return parent_records if changes.blank?
     parent_records ||= [] # the table was not part of an earlier fixpoint
 
@@ -35,7 +36,7 @@ module FixpointDiff
     end.compact
   end
 
-  def self.extract_records_changes(parent_records, records)
+  def extract_records_changes(parent_records, records)
     return records if parent_records.blank?
     records ||= []
 
@@ -52,4 +53,6 @@ module FixpointDiff
       end
     end
   end
+
+  module_function :apply_records_changes, :extract_records_changes
 end

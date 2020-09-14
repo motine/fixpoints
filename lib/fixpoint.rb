@@ -32,6 +32,74 @@ class Fixpoint
   FIXPOINT_FOLDER = 'fixpoints'
   TABLES_TO_SKIP = %w[ar_internal_metadata delayed_jobs schema_info schema_migrations].freeze
 
+  class << self
+    def exists?(fixname)
+      File.exist?(fixpoint_path(fixname))
+    end
+
+    def from_file(fixname)
+      raise Fixpoint::Error, "The requested fixpoint (\"#{fixname}\") could not be found. Re-run the test which stores the fixpoint." unless exists?(fixname)
+
+      file_path = fixpoint_path(fixname)
+      new(YAML.load_file(file_path))
+    end
+
+    # Creates a Fixpoint from the database contents. Empty tables are skipped.
+    def from_database
+      new(read_database_records)
+    end
+
+    def remove(fixname)
+      FileUtils.rm_f(fixpoint_path(fixname))
+    end
+
+    # reset primary key sequences for all tables
+    # useful when tests sometimes run before the storing the first fixpoint.
+    # these test might have incremented the id sequence already, so the ids in the fixpoints chance (which leads to differences).
+    def reset_pk_sequences!
+      if conn.respond_to?(:reset_pk_sequence!)
+        conn.tables.each { |table_name| conn.reset_pk_sequence!(table_name) }
+      end
+    end
+
+    def fixpoint_path(fixname)
+      fspath = self.fixpoints_path
+      raise Fixpoint::Error, 'Can not automatically infer the base path for the specs, please set `rspec_config.fixpoints_path` explicitly' if fspath.nil?
+      raise Fixpoint::Error, "Please create the fixpoints folder (and maybe create a .gitkeep): #{fspath}" if !File.exist?(fspath)
+      File.join(fspath, "#{fixname}.yml")
+    end
+
+    def conn
+      ActiveRecord::Base.connection
+    end
+
+    protected
+
+    def fixpoints_path
+      return RSpec.configuration.fixpoints_path unless RSpec.configuration.fixpoints_path.nil?
+      return Rails.root.join(RSpec.configuration.default_path, FIXPOINT_FOLDER) if defined?(Rails)
+      # now this is ugly, but necessary. we go up from the current example's path until we find the spec folder...
+      return nil if RSpec.current_example.nil?
+      spec_path = Pathname.new(RSpec.current_example.file_path).ascend.find { |pn| pn.basename.to_s == RSpec.configuration.default_path }.expand_path
+      File.join(spec_path, FIXPOINT_FOLDER)
+    end
+
+    def read_database_records
+      # adapted from: https://yizeng.me/2017/07/16/generate-rails-test-fixtures-yaml-from-database-dump/
+      tables = conn.tables
+      tables.reject! { |table_name| TABLES_TO_SKIP.include?(table_name) }
+
+      tables.each_with_object({}) do |table_name, acc|
+        result = conn.select_all("SELECT * FROM #{table_name}")
+        next if result.count.zero?
+
+        rows = result.to_a
+        rows.sort_by! { |row| row['id'] } if result.columns.include?('id') # let's make the order of items stable
+        acc[table_name] = rows
+      end
+    end
+  end
+
   attr_reader :records_in_tables # the complete records in the tables
 
   def initialize(records_in_tables)
@@ -75,75 +143,9 @@ class Fixpoint
     strip_columns_from_records(@records_in_tables[table_name], table_name, ignore_columns)
   end
 
-  # TODO use class << self idiom
-
-  def self.exists?(fixname)
-    File.exist?(fixpoint_path(fixname))
-  end
-
-  def self.from_file(fixname)
-    raise Fixpoint::Error, "The requested fixpoint (\"#{fixname}\") could not be found. Re-run the test which stores the fixpoint." unless exists?(fixname)
-
-    file_path = fixpoint_path(fixname)
-    new(YAML.load_file(file_path))
-  end
-
-  # Creates a Fixpoint from the database contents. Empty tables are skipped.
-  def self.from_database
-    new(read_database_records)
-  end
-
-  def self.remove(fixname)
-    FileUtils.rm_f(fixpoint_path(fixname))
-  end
-
-  # reset primary key sequences for all tables
-  # useful when tests sometimes run before the storing the first fixpoint.
-  # these test might have incremented the id sequence already, so the ids in the fixpoints chance (which leads to differences).
-  def self.reset_pk_sequences!
-    if conn.respond_to?(:reset_pk_sequence!)
-      conn.tables.each { |table_name| conn.reset_pk_sequence!(table_name) }
-    end
-  end
-
   protected
 
-  def self.conn
-    ActiveRecord::Base.connection
-  end
-
   delegate :conn, to: :class
-
-  def self.fixpoint_path(fixname)
-    fspath = self.fixpoints_path
-    raise Fixpoint::Error, 'Can not automatically infer the base path for the specs, please set `rspec_config.fixpoints_path` explicitly' if fspath.nil?
-    raise Fixpoint::Error, "Please create the fixpoints folder (and maybe create a .gitkeep): #{fspath}" if !File.exist?(fspath)
-    File.join(fspath, "#{fixname}.yml")
-  end
-
-  def self.fixpoints_path
-    return RSpec.configuration.fixpoints_path unless RSpec.configuration.fixpoints_path.nil?
-    return Rails.root.join(RSpec.configuration.default_path, FIXPOINT_FOLDER) if defined?(Rails)
-    # now this is ugly, but necessary. we go up from the current example's path until we find the spec folder...
-    return nil if RSpec.current_example.nil?
-    spec_path = Pathname.new(RSpec.current_example.file_path).ascend.find { |pn| pn.basename.to_s == RSpec.configuration.default_path }.expand_path
-    File.join(spec_path, FIXPOINT_FOLDER)
-  end
-
-  def self.read_database_records
-    # adapted from: https://yizeng.me/2017/07/16/generate-rails-test-fixtures-yaml-from-database-dump/
-    tables = conn.tables
-    tables.reject! { |table_name| TABLES_TO_SKIP.include?(table_name) }
-
-    tables.each_with_object({}) do |table_name, acc|
-      result = conn.select_all("SELECT * FROM #{table_name}")
-      next if result.count.zero?
-
-      rows = result.to_a
-      rows.sort_by! { |row| row['id'] } if result.columns.include?('id') # let's make the order of items stable
-      acc[table_name] = rows
-    end
-  end
 
   def contents_for_file
     YAML.dump(@records_in_tables)
