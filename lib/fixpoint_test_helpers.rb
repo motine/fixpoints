@@ -1,8 +1,8 @@
 # Helper methods to be included into RSpec
 module FixpointTestHelpers
-  def restore_fixpoint(fixname)
+  def restore_fixpoint(fixname, base: ActiveRecord::Base)
     @last_restored = fixname
-    IncrementalFixpoint.from_file(fixname).load_into_database
+    IncrementalFixpoint.from_file(fixname).load_into_database(base.connection)
   end
 
   # Compares the fixpoint with the records in the database.
@@ -16,7 +16,7 @@ module FixpointTestHelpers
   # ---
   # If we refactor this to a gem, we should rely on rspec (e.g. use minitest or move comparison logic to Fixpoint class).
   # Anyhow, we keep it like this for now, because the expectations give much nicer output than the minitest assertions.
-  def compare_fixpoint(fixname, ignored_columns=[:updated_at, :created_at], tables_to_compare: :all, store_fixpoint_and_fail: false, parent_fixname: nil)
+  def compare_fixpoint(fixname, ignored_columns=[:updated_at, :created_at], tables_to_compare: :all, store_fixpoint_and_fail: false, parent_fixname: nil, base: ActiveRecord::Base)
     if !IncrementalFixpoint.exists?(fixname)
       if store_fixpoint_and_fail
         store_fixpoint(fixname, parent_fixname)
@@ -27,7 +27,7 @@ module FixpointTestHelpers
       end
     end
 
-    database_fp = IncrementalFixpoint.from_database
+    database_fp = IncrementalFixpoint.from_database(nil, base.connection)
     fixpoint_fp = IncrementalFixpoint.from_file(fixname)
 
     tables_to_compare = (database_fp.table_names + fixpoint_fp.table_names).uniq if tables_to_compare == :all
@@ -45,14 +45,14 @@ module FixpointTestHelpers
 
   # it is not a good idea to overwrite the fixpoint each time because timestamps may change (which then shows up in version control).
   # Hence we only provide a method to write to it if it does not exist.
-  def store_fixpoint_unless_present(fixname, parent_fixname = nil)
-    store_fixpoint(fixname, parent_fixname) unless IncrementalFixpoint.exists?(fixname)
+  def store_fixpoint_unless_present(fixname, parent_fixname = nil, base: ActiveRecord::Base)
+    store_fixpoint(fixname, parent_fixname, base: base) unless IncrementalFixpoint.exists?(fixname)
   end
 
   # +parent_fixname+ when given, only the (incremental) changes to the parent are saved
   # please see store_fixpoint_unless_present for note on why not to use this method
-  def store_fixpoint(fixname, parent_fixname = nil)
+  def store_fixpoint(fixname, parent_fixname = nil, base: ActiveRecord::Base)
     parent_fixname = @last_restored if parent_fixname == :last_restored
-    IncrementalFixpoint.from_database(parent_fixname).save_to_file(fixname)
+    IncrementalFixpoint.from_database(parent_fixname, base.connection).save_to_file(fixname)
   end
 end

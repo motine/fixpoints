@@ -45,8 +45,8 @@ class Fixpoint
     end
 
     # Creates a Fixpoint from the database contents. Empty tables are skipped.
-    def from_database
-      new(read_database_records)
+    def from_database(conn)
+      new(read_database_records(conn))
     end
 
     def remove(fixname)
@@ -56,7 +56,7 @@ class Fixpoint
     # reset primary key sequences for all tables
     # useful when tests sometimes run before the storing the first fixpoint.
     # these test might have incremented the id sequence already, so the ids in the fixpoints chance (which leads to differences).
-    def reset_pk_sequences!
+    def reset_pk_sequences!(conn)
       return unless conn.respond_to?(:reset_pk_sequence!)
       conn.tables.each { |table_name| conn.reset_pk_sequence!(table_name) }
     end
@@ -67,10 +67,6 @@ class Fixpoint
       raise Fixpoint::Error, "Please create the fixpoints folder (and maybe create a .gitkeep): #{fspath}" if !File.exist?(fspath)
 
       File.join(fspath, "#{fixname}.yml")
-    end
-
-    def conn
-      ActiveRecord::Base.connection
     end
 
     protected
@@ -85,7 +81,7 @@ class Fixpoint
       File.join(spec_path, FIXPOINT_FOLDER)
     end
 
-    def read_database_records
+    def read_database_records(conn)
       # adapted from: https://yizeng.me/2017/07/16/generate-rails-test-fixtures-yaml-from-database-dump/
       tables = conn.tables
       tables.reject! { |table_name| TABLES_TO_SKIP.include?(table_name) }
@@ -107,7 +103,7 @@ class Fixpoint
     @records_in_tables = records_in_tables
   end
 
-  def load_into_database
+  def load_into_database(conn)
     # Here some more pointers on implementation details of fixtures:
     # - https://github.com/rails/rails/blob/2998672fc22f0d5e1a79a29ccb60d0d0e627a430/activerecord/lib/active_record/fixtures.rb#L612
     # - http://api.rubyonrails.org/v5.2.4/classes/ActiveRecord/FixtureSet.html#method-c-create_fixtures
@@ -123,7 +119,7 @@ class Fixpoint
 
     # actually insert
     conn.insert_fixtures_set(@records_in_tables)
-    self.class.reset_pk_sequences!
+    self.class.reset_pk_sequences!(conn)
   end
 
   def save_to_file(fixname)
@@ -145,8 +141,6 @@ class Fixpoint
   end
 
   protected
-
-  delegate :conn, to: :class
 
   def contents_for_file
     YAML.dump(@records_in_tables)

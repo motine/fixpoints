@@ -3,7 +3,7 @@ require "active_record"
 require "fixpoints"
 
 DB_PATH = File.join(__dir__, '../tmp/test.sqlite3')
-Warning[:deprecated] = false # let's get rid of the annoying kwargs deprecation notice in ActiveRecord
+#Warning[:deprecated] = false # let's get rid of the annoying kwargs deprecation notice in ActiveRecord
 
 class Book < ActiveRecord::Base
 end
