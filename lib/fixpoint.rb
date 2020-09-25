@@ -87,7 +87,7 @@ class Fixpoint
       tables.reject! { |table_name| TABLES_TO_SKIP.include?(table_name) }
 
       tables.each_with_object({}) do |table_name, acc|
-        result = conn.select_all("SELECT * FROM #{table_name}")
+        result = conn.select_all("SELECT * FROM #{conn.quote_table_name(table_name)}")
         next if result.count.zero?
 
         rows = result.to_a
