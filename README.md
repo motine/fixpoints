@@ -54,7 +54,7 @@ RSpec.describe 'User Flow', order: :defined do # !!! mind the order here !!!
     fill_in 'Name', with: 'Tom'
     click_on 'Save'
 
-    store_fixpoint_unless_present :registred_user
+    store_fixpoint_unless_present :registered_user
     # creates a YAML file containing all records (/spec/fixpoints/registred_user.yml)
   end
 
@@ -113,6 +113,15 @@ In order to achieve this, we must make sure that we let the store function know 
   end
 ```
 
+**Multiple Databases** If an application uses multiple databases, you can use the optional `connection` parameter
+to specify the database connection to use.
+
+```ruby
+  it 'posts an item' do
+    restore_fixpoint :registered_user, connection: ActiveRecord::Base.connection
+    # ...
+  end
+```
 
 ## Limitations & Known issues
 
