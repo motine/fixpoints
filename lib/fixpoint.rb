@@ -94,7 +94,7 @@ class Fixpoint
         rows.sort_by! { |row| row['id'] } if result.columns.include?('id') # let's make the order of items stable
         # fix jsonb columns by re-parsing them, so they are not saved as string to the yaml file
         jsonb_columns = result.column_types.select { |_, col_type| col_type.type == :jsonb }.collect { |col_name, _| col_name }
-        rows.collect! { |row| jsonb_columns.each {|jcol| row[jcol] = JSON.parse(row[jcol]) }; row }
+        rows.collect! { |row| jsonb_columns.each {|jcol| row[jcol] = JSON.parse(row[jcol] || 'null') }; row }
 
         acc[table_name] = rows
       end
