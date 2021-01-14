@@ -35,8 +35,6 @@ module FixpointTestHelpers
       db_records = database_fp.records_for_table(table_name, ignored_columns)
       fp_records = fixpoint_fp.records_for_table(table_name, ignored_columns)
 
-      # if a table is present in a fixpoint, there must be records in it because empty tables are stripped from fixpoints
-      expect(db_records).not_to be_empty, "#{table_name} not in database, but in fixpoint"
       expect(fp_records).not_to be_empty, "#{table_name} not in fixpoint, but in database"
       # we assume that the order of records returned by SELECT is stable (so we do not do any sorting)
       expect(db_records).to eq(fp_records), "Database records for table \"#{table_name}\" did not match fixpoint \"#{fixname}\". Consider removing the fixpoint and re-running the test if the change is intended."
