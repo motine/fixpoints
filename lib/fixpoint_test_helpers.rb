@@ -32,10 +32,9 @@ module FixpointTestHelpers
 
     tables_to_compare = (database_fp.table_names + fixpoint_fp.table_names).uniq if tables_to_compare == :all
     tables_to_compare.each do |table_name|
-      db_records = database_fp.records_for_table(table_name, ignored_columns)
-      fp_records = fixpoint_fp.records_for_table(table_name, ignored_columns)
+      db_records = database_fp.records_for_table(table_name, ignored_columns) || []
+      fp_records = fixpoint_fp.records_for_table(table_name, ignored_columns) || []
 
-      expect(fp_records).not_to be_empty, "#{table_name} not in fixpoint, but in database"
       # we assume that the order of records returned by SELECT is stable (so we do not do any sorting)
       expect(db_records).to eq(fp_records), "Database records for table \"#{table_name}\" did not match fixpoint \"#{fixname}\". Consider removing the fixpoint and re-running the test if the change is intended."
     end
