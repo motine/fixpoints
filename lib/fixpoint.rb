@@ -45,8 +45,8 @@ class Fixpoint
     end
 
     # Creates a Fixpoint from the database contents. Empty tables are skipped.
-    def from_database(conn)
-      new(read_database_records(conn))
+    def from_database(conn, exclude_tables: [])
+      new(read_database_records(conn, exclude_tables: exclude_tables))
     end
 
     def remove(fixname)
@@ -81,11 +81,11 @@ class Fixpoint
       File.join(spec_path, FIXPOINT_FOLDER)
     end
 
-    def read_database_records(conn)
+    def read_database_records(conn, exclude_tables: [])
       # adapted from: https://yizeng.me/2017/07/16/generate-rails-test-fixtures-yaml-from-database-dump/
       tables = conn.tables
-      tables.reject! { |table_name| TABLES_TO_SKIP.include?(table_name) }
-
+      excluded_tables = TABLES_TO_SKIP + exclude_tables
+      tables.reject! { |table_name| excluded_tables.include?(table_name) }
       tables.each_with_object({}) do |table_name, acc|
         result = conn.select_all("SELECT * FROM #{conn.quote_table_name(table_name)}")
         next if result.count.zero?

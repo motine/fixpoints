@@ -16,7 +16,7 @@ module FixpointTestHelpers
   # ---
   # If we refactor this to a gem, we should rely on rspec (e.g. use minitest or move comparison logic to Fixpoint class).
   # Anyhow, we keep it like this for now, because the expectations give much nicer output than the minitest assertions.
-  def compare_fixpoint(fixname, ignored_columns=[:updated_at, :created_at], tables_to_compare: :all, store_fixpoint_and_fail: false, parent_fixname: nil, connection: default_connection)
+  def compare_fixpoint(fixname, ignored_columns=[:updated_at, :created_at], tables_to_compare: :all, store_fixpoint_and_fail: false, parent_fixname: nil, connection: default_connection, exclude_tables: [])
     if !IncrementalFixpoint.exists?(fixname)
       if store_fixpoint_and_fail
         store_fixpoint(fixname, parent_fixname, connection: connection)
@@ -27,7 +27,7 @@ module FixpointTestHelpers
       end
     end
 
-    database_fp = IncrementalFixpoint.from_database(nil, connection)
+    database_fp = IncrementalFixpoint.from_database(nil, connection, exclude_tables: exclude_tables)
     fixpoint_fp = IncrementalFixpoint.from_file(fixname)
 
     tables_to_compare = (database_fp.table_names + fixpoint_fp.table_names).uniq if tables_to_compare == :all
@@ -48,9 +48,9 @@ module FixpointTestHelpers
 
   # +parent_fixname+ when given, only the (incremental) changes to the parent are saved
   # please see store_fixpoint_unless_present for note on why not to use this method
-  def store_fixpoint(fixname, parent_fixname = nil, connection: default_connection)
+  def store_fixpoint(fixname, parent_fixname = nil, connection: default_connection, exclude_tables: [])
     parent_fixname = @last_restored if parent_fixname == :last_restored
-    IncrementalFixpoint.from_database(parent_fixname, connection).save_to_file(fixname)
+    IncrementalFixpoint.from_database(parent_fixname, connection, exclude_tables: exclude_tables).save_to_file(fixname)
   end
 
   private def default_connection
