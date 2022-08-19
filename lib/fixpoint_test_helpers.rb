@@ -19,7 +19,7 @@ module FixpointTestHelpers
   def compare_fixpoint(fixname, ignored_columns=[:updated_at, :created_at], tables_to_compare: :all, store_fixpoint_and_fail: false, parent_fixname: nil, connection: default_connection, exclude_tables: [])
     if !IncrementalFixpoint.exists?(fixname)
       if store_fixpoint_and_fail
-        store_fixpoint(fixname, parent_fixname, connection: connection)
+        store_fixpoint(fixname, parent_fixname, connection: connection, exclude_tables: exclude_tables)
         pending("Fixpoint \"#{fixname}\" did not exist yet. Skipping comparison, but created fixpoint from database. Try re-running the test.")
         fail
       else
@@ -42,8 +42,8 @@ module FixpointTestHelpers
 
   # it is not a good idea to overwrite the fixpoint each time because timestamps may change (which then shows up in version control).
   # Hence we only provide a method to write to it if it does not exist.
-  def store_fixpoint_unless_present(fixname, parent_fixname = nil, connection: default_connection)
-    store_fixpoint(fixname, parent_fixname, connection: connection) unless IncrementalFixpoint.exists?(fixname)
+  def store_fixpoint_unless_present(fixname, parent_fixname = nil, connection: default_connection, exclude_tables: [])
+    store_fixpoint(fixname, parent_fixname, connection: connection, exclude_tables: exclude_tables) unless IncrementalFixpoint.exists?(fixname)
   end
 
   # +parent_fixname+ when given, only the (incremental) changes to the parent are saved

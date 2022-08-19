@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fixpoints (0.2.4)
+    fixpoints (0.2.6)
       activerecord (>= 5.0.0)
       rspec
 

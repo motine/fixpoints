@@ -34,7 +34,7 @@ class IncrementalFixpoint < Fixpoint
 
   # Creates a Fixpoint from the database contents. Empty tables are skipped.
   def self.from_database(parent_fixname=nil, conn, exclude_tables: [])
-    return super(conn) if parent_fixname.nil?
+    return super(conn, exclude_tables: exclude_tables) if parent_fixname.nil?
 
     parent = from_file(parent_fixname)
     changes_in_tables = FixpointDiff.extract_changes(parent.records_in_tables, read_database_records(conn, exclude_tables: exclude_tables))

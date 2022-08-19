@@ -60,7 +60,7 @@ RSpec.describe 'User Flow', order: :defined do # !!! mind the order here !!!
 
   it 'posts an item' do
     restore_fixpoint :registered_user
-    
+
     user = User.find_by(name: 'Hans')
     visit new_item_path(user)
     fill_in 'Item', with: '...'
@@ -76,7 +76,7 @@ end
 
 **Changes** If you did a lot of changes to a test, you can remove a fixpoint file from its directory.
 It will be recreated when the test producing it runs again.
-Don't forget re-running the tests based on it because their fixpoints might have to change too.  
+Don't forget re-running the tests based on it because their fixpoints might have to change too.
 Example: You need to add something to the database's `seeds.rb`. All subsequent fixpoints are missing the required entry.
 To update all fixpoints, just remove the whole `spec/fixpoints` folder and re-run all tests. Now all fixpoints should be updated.
 Be careful though, don't just remove the fixpoints if you are not sure what is going on.
@@ -119,6 +119,16 @@ to specify the database connection to use.
 ```ruby
   it 'posts an item' do
     restore_fixpoint :registered_user, connection: ActiveRecord::Base.connection
+    # ...
+  end
+```
+
+**Exclude Tables** If a database contains tables that are irrelevant to your tests, you can use the optional `exclude_tables` parameter
+to specify a set of tables to exclude from the fixpoint.
+
+```ruby
+  it 'excludes versions' do
+    restore_fixpoint :registered_user, exclude_tables: ['versions']
     # ...
   end
 ```
