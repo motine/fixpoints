@@ -30,8 +30,6 @@ RSpec.configure do |config|
         t.string :summary
         t.timestamps
       end
-    end
-    ActiveRecord::Schema.define do
       create_table :authors do |t|
         t.string :first_name
         t.string :last_name
