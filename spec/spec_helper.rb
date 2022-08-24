@@ -7,6 +7,8 @@ Warning[:deprecated] = false # let's get rid of the annoying kwargs deprecation 
 
 class Book < ActiveRecord::Base
 end
+class Author < ActiveRecord::Base
+end
 
 RSpec.configure do |config|
   config.disable_monkey_patching!
@@ -26,6 +28,11 @@ RSpec.configure do |config|
       create_table :books do |t|
         t.string :title
         t.string :summary
+        t.timestamps
+      end
+      create_table :authors do |t|
+        t.string :first_name
+        t.string :last_name
         t.timestamps
       end
     end

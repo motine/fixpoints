@@ -123,6 +123,16 @@ to specify the database connection to use.
   end
 ```
 
+**Exclude Tables** If a database contains tables that are irrelevant to your tests, you can use the optional `exclude_tables` parameter
+to specify a set of tables to exclude from the fixpoint.
+
+```ruby
+  it 'excludes versions' do
+    store_fixpoint_unless_present :registered_user, exclude_tables: ['versions']
+    # ...
+  end
+```
+
 ## Limitations & Known issues
 
 - The records in tables are ordered by their id.
